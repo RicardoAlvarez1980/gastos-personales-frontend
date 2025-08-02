@@ -1,42 +1,196 @@
-#root {
+:root {
+  --background-gradient: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
+  --text-color-light: #fff;
+  --text-color-dark: #212121;
+  --primary-color: #007acc;
+  --primary-color-dark: #005fa3;
+  --bg-content: #fff;
+  --bg-header: #1a1a1a;
+  --radius: 8px;
+  --shadow: 0 6px 20px rgba(0,0,0,0.3);
+  --transition: 0.25s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--background-gradient);
+  color: var(--text-color-light);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  margin: 1rem;
+  background: var(--bg-content);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  color: var(--text-color-dark);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Navbar fijo */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-header);
+  color: var(--text-color-light);
+  z-index: 1000;
+  border-radius: 0 0 10px 10px;
+  user-select: none;
+}
+
+.title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  margin: 0;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+}
+
+.tab-button {
+  background: #444;
+  border: none;
+  padding: 0.55rem 1.3rem;
+  border-radius: 6px;
+  color: #ddd;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background var(--transition);
+  display: inline-flex;
+  align-items: center;
+}
+
+.tab-button:hover {
+  background: #555;
+}
+
+.tab-button.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
+}
+
+/* contenido debajo del navbar: compensar altura */
+.app-content {
+  flex-grow: 1;
+  padding: 1.5rem;
+  padding-top: calc(1.5rem + 68px); /* ajustar si el header cambia de altura */
+  overflow-y: auto;
+  background: var(--bg-content);
+  border-radius: 0 0 10px 10px;
+  position: relative;
+}
+
+.loading,
+.alert {
+  font-size: 1.2rem;
   text-align: center;
+  padding: 2rem 0;
+  color: var(--primary-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 250px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  background: white;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  color: var(--text-color-dark);
+}
+
+.table thead tr {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.table th,
+.table td {
+  padding: 0.65rem 1rem;
+  border: 1px solid #e2e2e2;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.grafico-wrapper {
+  width: 100%;
+  background: white;
+  padding: 1rem;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  min-height: 420px;
+}
+
+/* estilos para el selector de año en el h3 */
+h3 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+h3 select {
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #61dafb;
+  background: #292929;
+  color: #ddd;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  to {
-    transform: rotate(360deg);
+  .title {
+    width: 100%;
   }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  .app-nav {
+    width: 100%;
+    gap: 0.5rem;
   }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
