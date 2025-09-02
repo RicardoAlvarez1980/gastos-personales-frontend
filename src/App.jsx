@@ -18,6 +18,13 @@ export default function App() {
   const añosDisponibles = [...new Set(gastosCompletos.map(g => g.año))].sort((a, b) => b - a);
 
   // -------------------------------
+  // Helper: Formatear números
+  // -------------------------------
+  const formatNumber = (num) => {
+    return (num || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // -------------------------------
   // Traer todos los gastos completos
   // -------------------------------
   useEffect(() => {
@@ -212,7 +219,7 @@ export default function App() {
                       <td>{g.servicio}</td>
                       <td>{g.año}</td>
                       <td>{g.mes.toString().padStart(2, '0')}</td>
-                      <td>${(parseFloat(g.importe) || 0).toFixed(2)}</td>
+                      <td>${formatNumber(parseFloat(g.importe))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -249,13 +256,71 @@ export default function App() {
           ) : (
             <div className="totales-wrapper">
               <h3>Totales Anuales por Servicio</h3>
-              <pre>{JSON.stringify(totalesAnuales, null, 2)}</pre>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Año</th>
+                    {servicios.map(s => (
+                      <th key={s.id}>{s.nombre}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(totalesAnuales).sort((a, b) => a - b).map(año => (
+                    <tr key={año}>
+                      <td>{año}</td>
+                      {servicios.map(s => (
+                        <td key={s.id}>${formatNumber(totalesAnuales[año][s.nombre])}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
               <h3>Totales Globales Anuales</h3>
-              <pre>{JSON.stringify(totalesGlobales, null, 2)}</pre>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Año</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {totalesGlobales.map((t, i) => (
+                    <tr key={i}>
+                      <td>{t.año}</td>
+                      <td>${formatNumber(t.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
               <h3>Totales Mensuales</h3>
-              <pre>{JSON.stringify(totalesMensuales, null, 2)}</pre>
+              {totalesMensuales.map(({ año, meses }) => (
+                <div key={año} style={{ marginBottom: '2rem' }}>
+                  <h4>Año {año}</h4>
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Mes</th>
+                        {servicios.map(s => <th key={s.id}>{s.nombre}</th>)}
+                        <th>Total Mensual</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {meses.map(({ mes, totalPorServicio, totalMensual }) => (
+                        <tr key={mes}>
+                          <td>{mes.toString().padStart(2, '0')}</td>
+                          {servicios.map(s => (
+                            <td key={s.id}>${formatNumber(totalPorServicio[s.nombre])}</td>
+                          ))}
+                          <td>${formatNumber(totalMensual)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
             </div>
           )
         )}

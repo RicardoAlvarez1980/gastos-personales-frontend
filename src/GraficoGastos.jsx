@@ -34,6 +34,13 @@ export default function GraficoGastos({ porAño, añoSeleccionado, añosDisponib
     return colores[idx % colores.length];
   }
 
+  // -------------------------------
+  // Helper: Formatear números AR
+  // -------------------------------
+  const formatNumber = (num) => {
+    return (num || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   return (
     <div>
       <h3 style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -64,8 +71,8 @@ export default function GraficoGastos({ porAño, añoSeleccionado, añosDisponib
         <BarChart data={datosGrafico} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="mes" />
-          <YAxis tickFormatter={valor => `$${valor.toFixed(0)}`} />
-          <Tooltip formatter={valor => `$${valor.toFixed(2)}`} />
+          <YAxis tickFormatter={valor => `$${formatNumber(valor)}`} />
+          <Tooltip formatter={valor => `$${formatNumber(valor)}`} />
           <Legend />
           {servicios.map((servicio, idx) => (
             <Bar key={servicio} dataKey={servicio} stackId="a" fill={getColor(idx)} name={servicio} />
@@ -87,7 +94,7 @@ export default function GraficoGastos({ porAño, añoSeleccionado, añosDisponib
             <tr key={servicio}>
               <td><b>{servicio}</b></td>
               {datosGrafico.map(dato => (
-                <td key={dato.mes} className="text-end">${dato[servicio].toFixed(2)}</td>
+                <td key={dato.mes} className="text-end">${formatNumber(dato[servicio])}</td>
               ))}
             </tr>
           ))}
