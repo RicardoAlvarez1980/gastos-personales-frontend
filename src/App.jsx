@@ -8,25 +8,31 @@ export default function App() {
   const [porAño, setPorAño] = useState([]);
   const [añoSeleccionado, setAñoSeleccionado] = useState('');
   const [cargando, setCargando] = useState(false);
-  const [view, setView] = useState('todos'); // 'todos', 'porAño', 'agregar'
+  const [view, setView] = useState('todos'); // 'todos', 'porAño', 'agregar', 'totales'
   const [servicios, setServicios] = useState([]);
+
+  const [totalesAnuales, setTotalesAnuales] = useState({});
+  const [totalesGlobales, setTotalesGlobales] = useState([]);
+  const [totalesMensuales, setTotalesMensuales] = useState([]);
 
   const añosDisponibles = [...new Set(gastosCompletos.map(g => g.año))].sort((a, b) => b - a);
 
+  // -------------------------------
   // Traer todos los gastos completos
+  // -------------------------------
   useEffect(() => {
     async function fetchGastosCompletos() {
       setCargando(true);
       try {
-        const res = await fetch('https://api-gastos-tlyv.onrender.com/gastos/');
+        const res = await fetch('https://api-gastos-tlyv.onrender.com/gastos?completo=true');
         if (!res.ok) {
           const texto = await res.text();
           throw new Error(`HTTP ${res.status}: ${texto.slice(0, 200)}`);
         }
         const data = await res.json();
-        setGastosCompletos(data);
-        if (data.length > 0) {
-          const años = [...new Set(data.map(g => g.año))].sort((a, b) => b - a);
+        setGastosCompletos(data.gastos || []);
+        if (data.gastos && data.gastos.length > 0) {
+          const años = [...new Set(data.gastos.map(g => g.año))].sort((a, b) => b - a);
           setAñoSeleccionado(años[0]);
         }
       } catch (e) {
@@ -38,22 +44,20 @@ export default function App() {
     fetchGastosCompletos();
   }, []);
 
-  // Traer gastos por año cuando cambia el año seleccionado o la vista
+  // -------------------------------
+  // Traer gastos por año
+  // -------------------------------
   useEffect(() => {
     async function fetchGastosPorAño(añoParam) {
       setCargando(true);
       try {
-        const res = await fetch(`https://api-gastos-tlyv.onrender.com/gastos/${encodeURIComponent(añoParam)}`);
+        const res = await fetch(`https://api-gastos-tlyv.onrender.com/gastos?año=${encodeURIComponent(añoParam)}?completo=true`);
         if (!res.ok) {
           const texto = await res.text();
           throw new Error(`HTTP ${res.status}: ${texto.slice(0, 200)}`);
         }
         const data = await res.json();
-        if (Array.isArray(data.gastos)) {
-          setPorAño(data.gastos);
-        } else {
-          setPorAño([]);
-        }
+        setPorAño(data.gastos || []);
       } catch (e) {
         console.error(`Error fetching gastos por año ${añoParam}:`, e);
         setPorAño([]);
@@ -66,7 +70,9 @@ export default function App() {
     }
   }, [añoSeleccionado, view]);
 
-  // Traer servicios para el formulario
+  // -------------------------------
+  // Traer servicios
+  // -------------------------------
   useEffect(() => {
     async function fetchServicios() {
       try {
@@ -84,7 +90,60 @@ export default function App() {
     fetchServicios();
   }, []);
 
-  // Función para agregar gasto desde el formulario
+  // -------------------------------
+  // Traer totales anuales por servicio
+  // -------------------------------
+  useEffect(() => {
+    async function fetchTotalesAnuales() {
+      try {
+        const res = await fetch('https://api-gastos-tlyv.onrender.com/totales/anuales');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setTotalesAnuales(data);
+      } catch (e) {
+        console.error('Error fetching totales anuales:', e);
+      }
+    }
+    fetchTotalesAnuales();
+  }, []);
+
+  // -------------------------------
+  // Traer totales globales anuales
+  // -------------------------------
+  useEffect(() => {
+    async function fetchTotalesGlobales() {
+      try {
+        const res = await fetch('https://api-gastos-tlyv.onrender.com/totales/globales-anuales');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setTotalesGlobales(data);
+      } catch (e) {
+        console.error('Error fetching totales globales:', e);
+      }
+    }
+    fetchTotalesGlobales();
+  }, []);
+
+  // -------------------------------
+  // Traer totales mensuales de todos los años
+  // -------------------------------
+  useEffect(() => {
+    async function fetchTotalesMensuales() {
+      try {
+        const res = await fetch('https://api-gastos-tlyv.onrender.com/totales/mensuales-todos');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setTotalesMensuales(data);
+      } catch (e) {
+        console.error('Error fetching totales mensuales:', e);
+      }
+    }
+    fetchTotalesMensuales();
+  }, []);
+
+  // -------------------------------
+  // Agregar gasto desde el formulario
+  // -------------------------------
   const handleAddGasto = async (nuevoGasto) => {
     try {
       setCargando(true);
@@ -99,7 +158,6 @@ export default function App() {
         return;
       }
       const gastoCreado = await res.json();
-      console.log('Gasto creado recibido del backend:', gastoCreado);
 
       // Mapear servicio_id a nombre de servicio
       const servicioNombre = servicios.find(s => s.id === gastoCreado.servicio_id)?.nombre || 'Desconocido';
@@ -115,22 +173,18 @@ export default function App() {
     }
   };
 
+  // -------------------------------
+  // Render
+  // -------------------------------
   return (
     <div className="app-container">
-      {/* Barra de navegación / selección de vista */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-        <Navbar view={view === 'agregar' ? view : view} setView={setView} />
-        {/* Si usás Navbar personalizado que ya tiene botones, podés mover "Agregar Gasto" allí */}
+        <Navbar view={view} setView={setView} />
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
-          <button onClick={() => setView('todos')} aria-pressed={view === 'todos'}>
-            Todos
-          </button>
-          <button onClick={() => setView('porAño')} aria-pressed={view === 'porAño'}>
-            Por Año
-          </button>
-          <button onClick={() => setView('agregar')} aria-pressed={view === 'agregar'}>
-            Agregar Gasto
-          </button>
+          <button onClick={() => setView('todos')} aria-pressed={view === 'todos'}>Todos</button>
+          <button onClick={() => setView('porAño')} aria-pressed={view === 'porAño'}>Por Año</button>
+          <button onClick={() => setView('agregar')} aria-pressed={view === 'agregar'}>Agregar Gasto</button>
+          <button onClick={() => setView('totales')} aria-pressed={view === 'totales'}>Totales</button>
         </div>
       </div>
 
@@ -174,22 +228,36 @@ export default function App() {
           ) : porAño.length === 0 ? (
             <div className="alert">No hay datos para este año.</div>
           ) : (
-            <div className="grafico-wrapper">
-              <GraficoGastos
-                porAño={porAño}
-                añoSeleccionado={añoSeleccionado}
-                añosDisponibles={añosDisponibles}
-                onCambiarAño={setAñoSeleccionado}
-              />
-            </div>
+            <GraficoGastos
+              porAño={porAño}
+              añoSeleccionado={añoSeleccionado}
+              añosDisponibles={añosDisponibles}
+              onCambiarAño={setAñoSeleccionado}
+            />
           )
         )}
 
         {/* Vista: Agregar Gasto */}
         {view === 'agregar' && (
-          <div className="agregar-gasto-wrapper">
-            <AgregarGasto servicios={servicios} addGasto={handleAddGasto} />
-          </div>
+          <AgregarGasto servicios={servicios} addGasto={handleAddGasto} />
+        )}
+
+        {/* Vista: Totales */}
+        {view === 'totales' && (
+          cargando ? (
+            <div className="loading">Cargando...</div>
+          ) : (
+            <div className="totales-wrapper">
+              <h3>Totales Anuales por Servicio</h3>
+              <pre>{JSON.stringify(totalesAnuales, null, 2)}</pre>
+
+              <h3>Totales Globales Anuales</h3>
+              <pre>{JSON.stringify(totalesGlobales, null, 2)}</pre>
+
+              <h3>Totales Mensuales</h3>
+              <pre>{JSON.stringify(totalesMensuales, null, 2)}</pre>
+            </div>
+          )
         )}
       </main>
     </div>
