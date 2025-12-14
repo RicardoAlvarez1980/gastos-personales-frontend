@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import servicios from '../data/serviciosConColores';
 import { usePrefersColorScheme } from '../hooks/usePrefersColorScheme';
-import { coloresLight, coloresDark } from '../data/colores'; // <-- cambialo
+import { coloresLight, coloresDark } from '../data/colores';
 
 function formatoTitulo(texto) {
   if (!texto) return '';
@@ -51,40 +51,42 @@ export default function GraficoBarrasServicios({ data }) {
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(value);
 
   // Renderizado custom etiquetas
-  const renderCustomLabel = (props) => {
-    const { x, y, width, value, index } = props;
-    const entry = dataFormateada[index];
-    const servicio = serviciosConColoresModo.find(s => s.nombre === entry.nombre_servicio);
-    const color = servicio ? servicio.color : colores.barraDefault;
+const renderCustomLabel = (props) => {
+  const { x, y, width, value, index } = props;
+  const entry = dataFormateada[index];
+  const servicio = serviciosConColoresModo.find(s => s.nombre === entry.nombre_servicio);
+  const color = servicio ? servicio.color : colores.barraDefault;
 
-    const labelX = x + width / 2;
-    const labelY = y - 10;
+  const labelX = x + width / 2;
+  const topMargin = 20; // espacio desde el borde superior del gráfico
+  const labelY = topMargin; // fija Y en un valor constante para alinear todas arriba
 
-    return (
-      <g>
-        <rect
-          x={labelX - 30}
-          y={labelY - 14}
-          width={60}
-          height={20}
-          fill={color}
-          rx={4}
-          ry={4}
-        />
-        <text
-          x={labelX}
-          y={labelY}
-          fill="#fff"
-          fontWeight="bold"
-          fontSize={12}
-          textAnchor="middle"
-          dominantBaseline="middle"
-        >
-          {formatearImporte(value)}
-        </text>
-      </g>
-    );
-  };
+  return (
+    <g>
+      <rect
+        x={labelX - 35}
+        y={labelY - 14}
+        width={70}
+        height={24}
+        fill={color}
+        rx={4}
+        ry={4}
+      />
+      <text
+        x={labelX}
+        y={labelY}
+        fill="#fff"
+        fontWeight="bold"
+        fontSize={12}
+        textAnchor="middle"
+        dominantBaseline="middle"
+      >
+        {formatearImporte(value)}
+      </text>
+    </g>
+  );
+};
+
 
   return (
     <>

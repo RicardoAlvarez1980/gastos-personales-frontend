@@ -1,28 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export function usePrefersColorScheme() {
   const [mode, setMode] = useState('light');
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setMode(mediaQuery.matches ? 'dark' : 'light');
-
-    const handler = (e) => setMode(e.matches ? 'dark' : 'light');
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handler);
-    } else if (mediaQuery.addListener) {
-      // Para navegadores más viejos
-      mediaQuery.addListener(handler);
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    if (media.matches) {
+      setMode('dark');
     }
-
-    return () => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener('change', handler);
-      } else if (mediaQuery.removeListener) {
-        mediaQuery.removeListener(handler);
-      }
+    const listener = (e) => {
+      setMode(e.matches ? 'dark' : 'light');
     };
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
   }, []);
 
   return mode;
