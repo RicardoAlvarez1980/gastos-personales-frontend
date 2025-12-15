@@ -7,6 +7,7 @@ import FormularioAgregarGasto from '../componentes/FormularioAgregarGasto'
 import ModalConfirmacion from '../componentes/ModalConfirmacion'
 import serviciosConColores from '../data/serviciosConColores'
 import { supabase } from '../supabaseClient'
+import ExtenderAniosButton from '../componentes/ExtenderAniosButton'
 
 export default function DashboardPrincipal() {
   const [vistaActiva, setVistaActiva] = useState(null)
@@ -241,6 +242,9 @@ export default function DashboardPrincipal() {
               onCancelar={cancelarModificacion}
               colores={colores}
             />
+            <div style={{ marginBottom: 20 }}>
+              <ExtenderAniosButton anioBase={Math.max(...aniosDisponibles)} />
+            </div>
             <FormularioAgregarGasto
               gastos={gastos}
               servicios={servicios}
