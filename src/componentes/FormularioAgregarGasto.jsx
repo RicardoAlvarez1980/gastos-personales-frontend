@@ -5,7 +5,7 @@ export default function FormularioAgregarGasto({
   gastos,
   servicios,
   aniosDisponibles,
-  mesesPorAnio,
+  mesesPorAnio, // ya no lo usamos para meses pero lo dejo por si usás en otro lado
   onAgregar,
   colores,
   resetFlag,
@@ -51,7 +51,8 @@ export default function FormularioAgregarGasto({
     onAgregar(gastoParaEnviar)
   }
 
-  const meses = nuevoGasto.año ? mesesPorAnio[nuevoGasto.año] || [] : []
+  // Ahora los meses siempre van del 1 al 12 sin importar lo que haya en mesesPorAnio
+  const meses = [1,2,3,4,5,6,7,8,9,10,11,12]
 
   return (
     <form onSubmit={handleSubmit} style={{ backgroundColor: colores.fondoForm, padding: 20, borderRadius: 8 }}>
