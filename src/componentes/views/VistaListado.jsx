@@ -1,4 +1,4 @@
-import { nombreMes } from '../../utils/formateo'
+import { formatearNombreServicio, nombreMes } from '../../utils/formateo'
 
 const PAGE_SIZE = 10
 
@@ -20,7 +20,9 @@ export default function VistaListado({
     <div>
       <h2>Listado de gastos</h2>
 
-      {/* SELECTORES */}
+      {/* ===========================
+          SELECTORES
+      =========================== */}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
         <select
           value={anioSeleccionado}
@@ -57,7 +59,9 @@ export default function VistaListado({
         </select>
       </div>
 
-      {/* TABLA */}
+      {/* ===========================
+          TABLA
+      =========================== */}
       {loading && <p>Cargando...</p>}
 
       {!loading && gastos.length > 0 && (
@@ -75,24 +79,15 @@ export default function VistaListado({
             <tbody>
               {gastos.map(g => (
                 <tr key={g.id}>
-                  <td>{g.año}</td>
-                  <td>{nombreMes(g.mes)}</td>
-                  <td>{g.servicio_nombre}</td>
-                  <td>
-                    {Number(g.importe).toLocaleString('es-AR', {
-                      style: 'currency',
-                      currency: 'ARS',
-                    })}
-                  </td>
-                  <td>
-                    <button onClick={() => onEliminar(g.id)}>Eliminar</button>
-                  </td>
+                  <td>{g.año}</td><td>{nombreMes(g.mes)}</td><td>{formatearNombreServicio(g.servicio_nombre)}</td><td>{Number(g.importe).toLocaleString('es-AR', {style: 'currency', currency: 'ARS'})}</td><td><button onClick={() => onEliminar(g.id)}>Eliminar</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {/* PAGINADO */}
+          {/* ===========================
+              PAGINADO
+          =========================== */}
           {mostrarPaginado && (
             <div style={{ marginTop: '1rem' }}>
               <button

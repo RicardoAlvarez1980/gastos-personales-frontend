@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { toast } from 'react-toastify'
-import { formatearNombreServicio, nombreMes } from '../utils/formateo.js'  // ajustá ruta
+import { formatearNombreServicio, nombreMes } from '../utils/formateo.js'
 
 export default function FormularioAgregarGasto({
   gastos,
@@ -9,6 +8,8 @@ export default function FormularioAgregarGasto({
   mesesPorAnio,
   onAgregar,
   colores,
+  resetFlag,
+  onResetHandled,
 }) {
   const [nuevoGasto, setNuevoGasto] = useState({
     año: '',
@@ -16,184 +17,120 @@ export default function FormularioAgregarGasto({
     servicio_id: '',
     importe: '',
   })
-  const [confirmarModificacion, setConfirmarModificacion] = useState(false)
 
   useEffect(() => {
-    setNuevoGasto(prev => ({ ...prev, mes: '', servicio_id: '' }))
-    setConfirmarModificacion(false)
-  }, [nuevoGasto.año])
+    if (resetFlag) {
+      setNuevoGasto({ año: '', mes: '', servicio_id: '', importe: '' })
+      if (onResetHandled) onResetHandled()
+    }
+  }, [resetFlag, onResetHandled])
 
-  const existeGasto = (año, mes, servicioId) =>
-    gastos.some(
-      g =>
-        g.año === Number(año) &&
-        g.mes === Number(mes) &&
-        g.servicio_id === Number(servicioId)
-    )
-
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value } = e.target
-    setNuevoGasto(prev => ({ ...prev, [name]: value }))
-    setConfirmarModificacion(false)
+    setNuevoGasto(prev => ({
+      ...prev,
+      [name]: value,
+    }))
   }
 
-  const handleModificar = () => {
-    toast.info('Funcionalidad modificar pendiente')
-  }
-
-  const handleSubmit = e => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    const { año, mes, servicio_id, importe } = nuevoGasto
-    if (!año || !mes || !servicio_id || !importe) {
-      toast.error('Por favor, completá todos los campos.')
+
+    if (!nuevoGasto.año || !nuevoGasto.mes || !nuevoGasto.servicio_id || !nuevoGasto.importe) {
+      alert('Por favor completá todos los campos.')
       return
     }
-    if (existeGasto(año, mes, servicio_id)) {
-      // Buscar nombre para mostrar bonito
-      const servicio = servicios.find(s => s.id === Number(servicio_id))
-      toast.error(`El gasto "${formatearNombreServicio(servicio?.nombre)}" para ${nombreMes(Number(mes))}/${año} ya existe.`)
-      setConfirmarModificacion(true)
-      return
+
+    const gastoParaEnviar = {
+      año: Number(nuevoGasto.año),
+      mes: Number(nuevoGasto.mes),
+      servicio_id: Number(nuevoGasto.servicio_id),
+      importe: Number(nuevoGasto.importe),
     }
-    onAgregar({
-      año: Number(año),
-      mes: Number(mes),
-      servicio_id: Number(servicio_id),
-      importe: Number(importe),
-    })
-    toast.success('Gasto agregado correctamente!')
-    setNuevoGasto({ año: '', mes: '', servicio_id: '', importe: '' })
+
+    onAgregar(gastoParaEnviar)
   }
+
+  const meses = nuevoGasto.año ? mesesPorAnio[nuevoGasto.año] || [] : []
 
   return (
-    <>
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          marginBottom: 20,
-          display: 'flex',
-          gap: 12,
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          color: colores.texto,
-          backgroundColor: colores.fondoForm,
-          padding: 16,
-          borderRadius: 8,
-        }}
-      >
-        {/* Año */}
+    <form onSubmit={handleSubmit} style={{ backgroundColor: colores.fondoForm, padding: 20, borderRadius: 8 }}>
+      <div style={{ marginBottom: 10 }}>
+        <label htmlFor="año">Año:</label><br />
         <select
+          id="año"
           name="año"
           value={nuevoGasto.año}
           onChange={handleChange}
-          style={{ padding: 6, borderRadius: 4, border: '1px solid #ccc', minWidth: 120 }}
+          style={{ width: '100%', padding: 6 }}
         >
-          <option value="">Seleccioná año</option>
-          {aniosDisponibles.map(año => (
-            <option key={año} value={año}>
-              {año}
-            </option>
+          <option value="">Seleccioná un año</option>
+          {aniosDisponibles.map(a => (
+            <option key={a} value={a}>{a}</option>
           ))}
         </select>
+      </div>
 
-        {/* Mes */}
+      <div style={{ marginBottom: 10 }}>
+        <label htmlFor="mes">Mes:</label><br />
         <select
+          id="mes"
           name="mes"
           value={nuevoGasto.mes}
           onChange={handleChange}
           disabled={!nuevoGasto.año}
-          style={{
-            padding: 6,
-            borderRadius: 4,
-            border: '1px solid #ccc',
-            minWidth: 120,
-            opacity: nuevoGasto.año ? 1 : 0.6,
-          }}
+          style={{ width: '100%', padding: 6 }}
         >
-          <option value="">Seleccioná mes</option>
-          {(mesesPorAnio[nuevoGasto.año] || []).map(mes => (
-            <option key={mes} value={mes}>
-              {mes.toString().padStart(2, '0')}
-            </option>
+          <option value="">Seleccioná un mes</option>
+          {meses.map(m => (
+            <option key={m} value={m}>{nombreMes(m)}</option>
           ))}
         </select>
+      </div>
 
-        {/* Servicio */}
+      <div style={{ marginBottom: 10 }}>
+        <label htmlFor="servicio_id">Servicio:</label><br />
         <select
+          id="servicio_id"
           name="servicio_id"
           value={nuevoGasto.servicio_id}
           onChange={handleChange}
-          disabled={!nuevoGasto.mes}
-          style={{
-            padding: 6,
-            borderRadius: 4,
-            border: '1px solid #ccc',
-            minWidth: 150,
-            opacity: nuevoGasto.mes ? 1 : 0.6,
-          }}
+          style={{ width: '100%', padding: 6 }}
         >
-          <option value="">Seleccioná servicio</option>
-          {servicios.map(srv => (
-            <option key={srv.id} value={srv.id}>
-              {formatearNombreServicio(srv.nombre)}
-            </option>
+          <option value="">Seleccioná un servicio</option>
+          {servicios.map(s => (
+            <option key={s.id} value={s.id}>{formatearNombreServicio(s.nombre)}</option>
           ))}
         </select>
+      </div>
 
-        {/* Importe */}
+      <div style={{ marginBottom: 10 }}>
+        <label htmlFor="importe">Importe:</label><br />
         <input
-          type="number"
+          id="importe"
           name="importe"
-          placeholder="Importe"
+          type="number"
+          step="0.01"
+          min="0"
           value={nuevoGasto.importe}
           onChange={handleChange}
-          min="0"
-          step="0.01"
-          disabled={!nuevoGasto.servicio_id}
-          style={{
-            padding: 6,
-            borderRadius: 4,
-            border: '1px solid #ccc',
-            width: 120,
-            opacity: nuevoGasto.servicio_id ? 1 : 0.6,
-          }}
+          style={{ width: '100%', padding: 6 }}
         />
+      </div>
 
-        <button
-          type="submit"
-          disabled={!nuevoGasto.importe || !nuevoGasto.servicio_id}
-          style={{
-            padding: '6px 12px',
-            borderRadius: 4,
-            cursor: 'pointer',
-            backgroundColor: colores.botonFondo,
-            color: colores.botonTexto,
-            border: 'none',
-            opacity: nuevoGasto.importe && nuevoGasto.servicio_id ? 1 : 0.6,
-          }}
-        >
-          Agregar gasto
-        </button>
-      </form>
-
-      {confirmarModificacion && (
-        <div style={{ textAlign: 'center' }}>
-          <button
-            style={{
-              marginTop: 6,
-              padding: '4px 10px',
-              cursor: 'pointer',
-              backgroundColor: '#c00',
-              color: 'white',
-              border: 'none',
-              borderRadius: 4,
-            }}
-            onClick={handleModificar}
-          >
-            Modificar gasto existente
-          </button>
-        </div>
-      )}
-    </>
+      <button
+        type="submit"
+        style={{
+          backgroundColor: colores.botonFondo,
+          color: colores.botonTexto,
+          padding: '10px 20px',
+          border: 'none',
+          borderRadius: 4,
+          cursor: 'pointer',
+        }}
+      >
+        Agregar Gasto
+      </button>
+    </form>
   )
 }

@@ -4,6 +4,7 @@ import Sidebar from './layout/Sidebar'
 import VistaListado from './views/VistaListado'
 import VistaGrafico from './views/VistaGrafico'
 import FormularioAgregarGasto from '../componentes/FormularioAgregarGasto'
+import ModalConfirmacion from '../componentes/ModalConfirmacion'
 import serviciosConColores from '../data/serviciosConColores'
 import { supabase } from '../supabaseClient'
 
@@ -15,17 +16,19 @@ export default function DashboardPrincipal() {
   const [aniosDisponibles, setAniosDisponibles] = useState([])
   const [mesesPorAnio, setMesesPorAnio] = useState({})
 
-  // Para filtros que usará VistaListado
   const [anioFiltro, setAnioFiltro] = useState('')
   const [mesFiltro, setMesFiltro] = useState('')
   const [page, setPage] = useState(0)
   const PAGE_SIZE = 10
   const [loading, setLoading] = useState(false)
 
-  // Carga servicios, años, meses (una sola vez)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [gastoParaModificar, setGastoParaModificar] = useState(null)
+
+  const [resetFormFlag, setResetFormFlag] = useState(false) // Para resetear formulario
+
   useEffect(() => {
     async function cargarDatos() {
-      // Servicios
       const { data: serviciosData, error: errS } = await supabase.from('servicios').select('id, nombre')
       if (!errS && serviciosData) {
         const serviciosConColor = serviciosData.map(srv => {
@@ -35,13 +38,11 @@ export default function DashboardPrincipal() {
         setServicios(serviciosConColor)
       }
 
-      // Años vía RPC
       const { data: aniosData, error: errA } = await supabase.rpc('get_anios_gastos')
       if (!errA && aniosData) {
         const añosUnicos = aniosData.map(a => a.anio)
         setAniosDisponibles(añosUnicos)
 
-        // Meses por año
         const mesesMap = {}
         for (const anio of añosUnicos) {
           const { data: mesesData, error: errM } = await supabase.rpc('get_meses_por_anio', { anio_input: anio })
@@ -56,7 +57,6 @@ export default function DashboardPrincipal() {
     cargarDatos()
   }, [])
 
-  // Función para cargar gastos con filtros y paginado
   const cargarGastos = async (anio, mes, pagina) => {
     if (!anio) {
       setGastos([])
@@ -75,14 +75,13 @@ export default function DashboardPrincipal() {
       data = res.data
       error = res.error
     } else {
-      let query = supabase
+      const query = supabase
         .from('gastos')
         .select('id, servicio_id, año, mes, importe')
         .order('id', { ascending: true })
         .range(pagina * PAGE_SIZE, pagina * PAGE_SIZE + PAGE_SIZE - 1)
-
-      if (anio !== 'ALL') query = query.eq('año', Number(anio))
-      if (mes && mes !== 'ALL') query = query.eq('mes', Number(mes))
+      if (anio !== 'ALL') query.eq('año', Number(anio))
+      if (mes && mes !== 'ALL') query.eq('mes', Number(mes))
 
       const res = await query
       data = res.data
@@ -95,7 +94,6 @@ export default function DashboardPrincipal() {
       return
     }
 
-    // Nombres de servicios
     const servicioIds = [...new Set(data.map(g => g.servicio_id))]
     const { data: serviciosData } = await supabase
       .from('servicios')
@@ -112,45 +110,91 @@ export default function DashboardPrincipal() {
     setLoading(false)
   }
 
-  // Cargar gastos cuando cambien filtros o paginado
   useEffect(() => {
     cargarGastos(anioFiltro, mesFiltro, page)
   }, [anioFiltro, mesFiltro, page])
 
-  // Agregar gasto
-  const agregarGasto = async (nuevo) => {
-    const { data, error } = await supabase.rpc('insertar_gasto', {
+  const cancelarModificacion = () => {
+    setModalVisible(false)
+    setGastoParaModificar(null)
+    setResetFormFlag(true) // Señal para resetear formulario
+  }
+
+  const confirmarModificacion = async () => {
+    if (!gastoParaModificar) return
+
+    const { nuevo } = gastoParaModificar
+
+    const { error: errUpdate } = await supabase.rpc('actualizar_importe_gasto', {
       _servicio_id: nuevo.servicio_id,
       _año: nuevo.año,
       _mes: nuevo.mes,
-      _importe: nuevo.importe,
+      _nuevo_importe: nuevo.importe,
     })
 
-    if (error) {
-      console.error('Error al insertar gasto vía RPC:', error)
-      toast.error('Error al agregar gasto en la base de datos.')
-      return
-    }
-
-    if (data && data.length > 0) {
-      toast.success('Gasto guardado correctamente en la base!')
-      // Recargar gastos para reflejar cambios
+    if (errUpdate) {
+      toast.error('Error al actualizar importe.')
+    } else {
+      toast.success('Importe actualizado correctamente.')
       cargarGastos(anioFiltro, mesFiltro, page)
       setVistaActiva('listado')
-    } else {
-      toast.error('No se pudo agregar el gasto, respuesta vacía.')
+    }
+
+    setModalVisible(false)
+    setGastoParaModificar(null)
+    setResetFormFlag(true) // Resetear formulario tras confirmar
+  }
+
+  const agregarGasto = async (nuevo) => {
+    try {
+      const { data: gastoExistente, error: errCheck } = await supabase.rpc('verificar_gasto_existente', {
+        _servicio_id: nuevo.servicio_id,
+        _año: nuevo.año,
+        _mes: nuevo.mes,
+      })
+
+      if (errCheck) {
+        toast.error('Error al verificar gasto existente.')
+        return
+      }
+
+      if (gastoExistente && gastoExistente.length > 0) {
+        setGastoParaModificar({ existente: gastoExistente[0], nuevo })
+        setModalVisible(true)
+        return
+      }
+
+      const { data, error } = await supabase.rpc('insertar_gasto', {
+        _servicio_id: nuevo.servicio_id,
+        _año: nuevo.año,
+        _mes: nuevo.mes,
+        _importe: nuevo.importe,
+      })
+
+      if (error) {
+        toast.error('Error al agregar gasto en la base de datos.')
+        return
+      }
+
+      if (data && data.length > 0) {
+        toast.success('Gasto guardado correctamente en la base!')
+        cargarGastos(anioFiltro, mesFiltro, page)
+        setVistaActiva('listado')
+      } else {
+        toast.error('No se pudo agregar el gasto, respuesta vacía.')
+      }
+    } catch (error) {
+      toast.error('Error inesperado: ' + error.message)
     }
   }
 
-  // Eliminar gasto
   const eliminarGasto = async (id) => {
-    const { error } = await supabase.from('gastos').delete().eq('id', id)
+    const { error } = await supabase.rpc('eliminar_gasto', { _id: id })
     if (error) {
       toast.error('Error al eliminar gasto.')
       console.error(error)
     } else {
       toast.success('Gasto eliminado correctamente.')
-      // Recargar gastos
       cargarGastos(anioFiltro, mesFiltro, page)
     }
   }
@@ -184,14 +228,30 @@ export default function DashboardPrincipal() {
         return <VistaGrafico gastos={gastos} />
       case 'agregar':
         return (
-          <FormularioAgregarGasto
-            gastos={gastos}
-            servicios={servicios}
-            aniosDisponibles={aniosDisponibles}
-            mesesPorAnio={mesesPorAnio}
-            onAgregar={agregarGasto}
-            colores={colores}
-          />
+          <>
+            <ModalConfirmacion
+              visible={modalVisible}
+              mensaje={
+                gastoParaModificar
+                  ? `Ya existe un gasto para ese año, mes y servicio con importe ${gastoParaModificar.existente.importe}. ` +
+                    `¿Querés modificarlo al nuevo importe ${gastoParaModificar.nuevo.importe}?`
+                  : ''
+              }
+              onConfirmar={confirmarModificacion}
+              onCancelar={cancelarModificacion}
+              colores={colores}
+            />
+            <FormularioAgregarGasto
+              gastos={gastos}
+              servicios={servicios}
+              aniosDisponibles={aniosDisponibles}
+              mesesPorAnio={mesesPorAnio}
+              onAgregar={agregarGasto}
+              colores={colores}
+              resetFlag={resetFormFlag}        // Le paso el flag
+              onResetHandled={() => setResetFormFlag(false)} // Limpio flag después del reset
+            />
+          </>
         )
       default:
         return (
