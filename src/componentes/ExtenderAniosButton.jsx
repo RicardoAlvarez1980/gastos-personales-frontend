@@ -39,7 +39,7 @@ export default function ExtenderAniosButton({ anioBase }) {
       }}
       title="Extender años en gastos para servicios usados"
     >
-      {loading ? 'Extendiéndose...' : 'Extender 5 años desde año base'}
+      {loading ? 'Extendiéndose...' : 'Extender 5 años más'}
     </button>
   )
 }
