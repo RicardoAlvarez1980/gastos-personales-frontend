@@ -111,7 +111,7 @@ export default function VistaListado({
       )}
 
       {!loading && anioSeleccionado && gastos.length === 0 && (
-        <p>No hay gastos para ese criterio.</p>
+        <p><strong>No hay gastos para ese criterio.</strong></p>
       )}
     </div>
   )
