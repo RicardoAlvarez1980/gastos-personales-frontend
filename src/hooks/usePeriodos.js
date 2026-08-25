@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { obtenerAnios, obtenerMeses } from '../services/gastosService';
 
 export function usePeriodos() {
@@ -9,35 +9,48 @@ export function usePeriodos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const cargarAnios = useCallback(async () => {
+    const items = await obtenerAnios();
+    const ordenados = [...items].filter(Number.isFinite).sort((a, b) => b - a);
+    setAnios(ordenados);
+    return ordenados;
+  }, []);
+
+  const cargarMeses = useCallback(async (anioActual, mesPreferido = null) => {
+    if (anioActual == null) { setMeses([]); setMes(null); return []; }
+    const items = await obtenerMeses(anioActual);
+    const ordenados = [...items].filter(Number.isFinite).sort((a, b) => a - b);
+    setMeses(ordenados);
+    setMes(actual => {
+      const candidato = mesPreferido ?? actual;
+      return candidato != null && ordenados.includes(Number(candidato)) ? Number(candidato) : (ordenados[ordenados.length - 1] ?? null);
+    });
+    return ordenados;
+  }, []);
+
+  const refrescar = useCallback(async ({ anioPreferido = null, mesPreferido = null } = {}) => {
+    setError('');
+    const nuevosAnios = await cargarAnios();
+    const anioObjetivo = anioPreferido != null && nuevosAnios.includes(Number(anioPreferido)) ? Number(anioPreferido) : (nuevosAnios[0] ?? null);
+    if (anioObjetivo == null) { setAnio(null); setMeses([]); setMes(null); return; }
+    setAnio(anioObjetivo);
+    await cargarMeses(anioObjetivo, mesPreferido);
+  }, [cargarAnios, cargarMeses]);
+
   useEffect(() => {
     let activo = true;
     setLoading(true);
-    obtenerAnios()
-      .then((items) => {
-        if (!activo) return;
-        const ordenados = [...items].filter(Number.isFinite).sort((a, b) => b - a);
-        setAnios(ordenados);
-        setAnio((actual) => actual ?? ordenados[0] ?? null);
-      })
-      .catch((err) => activo && setError(err.message))
+    cargarAnios()
+      .then(items => items[0] != null ? cargarMeses(items[0]) : undefined)
+      .catch(err => activo && setError(err?.message || 'No se pudieron cargar los períodos.'))
       .finally(() => activo && setLoading(false));
     return () => { activo = false; };
-  }, []);
+  }, [cargarAnios, cargarMeses]);
 
   useEffect(() => {
     if (anio == null) return;
-    let activo = true;
-    setMes(null);
-    obtenerMeses(anio)
-      .then((items) => {
-        if (!activo) return;
-        const ordenados = [...items].filter(Number.isFinite).sort((a, b) => a - b);
-        setMeses(ordenados);
-        setMes(ordenados[ordenados.length - 1] ?? null);
-      })
-      .catch((err) => activo && setError(err.message));
-    return () => { activo = false; };
-  }, [anio]);
+    cargarMeses(anio).catch(err => setError(err?.message || 'No se pudieron cargar los meses.'));
+  }, [anio, cargarMeses]);
 
-  return { anios, anio, setAnio, meses, mes, setMes, loading, error };
+  return { anios, anio, setAnio, meses, mes, setMes, loading, error, refrescar };
 }
