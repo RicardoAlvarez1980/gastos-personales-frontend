@@ -14,6 +14,7 @@ export function formatearNombreServicio(nombre) {
     MOVISTAR: 'Movistar',
     PERSONAL: 'Personal',
     PROTECCION_CIUDADANA: 'Protección Ciudadana',
+    'Proteccion Ciudadana': 'Protección Ciudadana',
     TASAS_RETRIBUTIVAS: 'Tasas Retributivas',
     SERVICIOS_SANITARIOS: 'Servicios Sanitarios',
   }
