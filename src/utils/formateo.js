@@ -36,3 +36,13 @@ export function nombreMes(mes) {
   ]
   return meses[mes - 1] || '—'
 }
+
+export function formatearImporte(valor) {
+  const numero = Number(valor)
+  if (!Number.isFinite(numero)) return '$ 0,00'
+
+  return `$ ${numero.toLocaleString('es-AR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+}
