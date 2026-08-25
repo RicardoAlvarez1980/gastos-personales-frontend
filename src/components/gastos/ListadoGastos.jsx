@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import Modal from '../common/Modal';
-import { formatearNombreServicio, nombreMes } from '../../utils/formateo';
+import { formatearNombreServicio, nombreMes, formatearImporte } from '../../utils/formateo';
 
-function importe(value) { return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(Number(value) || 0); }
+function importe(value) { return formatearImporte(value); }
 function nombreServicio(nombre, id) { return nombre ? formatearNombreServicio(nombre) : `Servicio #${id}`; }
 
 export default function ListadoGastos({ anio, mes, gastos, loading, error, onEliminar, onEditar }) {
@@ -31,10 +31,7 @@ export default function ListadoGastos({ anio, mes, gastos, loading, error, onEli
 
   return <section className="v2-gastos-panel">
     <div className="v2-section-heading">
-      <div>
-        <span className="v2-eyebrow">GASTOS REGISTRADOS</span>
-        <h2>{mes ? nombreMes(Number(mes)) : 'MES'}</h2>
-      </div>
+      <div><span className="v2-eyebrow">GASTOS REGISTRADOS</span><h2>{mes ? nombreMes(Number(mes)) : 'MES'}</h2></div>
       <span className="v2-count">{gastos.length} registro{gastos.length === 1 ? '' : 's'}</span>
     </div>
     {loading && <div className="v2-state">Cargando gastos…</div>}
