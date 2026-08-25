@@ -25,11 +25,22 @@ export default function ListadoGastos({ anio, mes, gastos, loading, error, onEli
   };
 
   const cantidad = gastos.length;
-  const mesesRegistrados = anual ? new Set(gastos.map(g => Number(g.mes)).filter(Number.isFinite)).size : null;
-  const promedio = anual && cantidad ? total / cantidad : 0;
-  const importes = gastos.map(g => Number(g.importe)).filter(Number.isFinite);
-  const mayor = importes.length ? Math.max(...importes) : 0;
-  const menor = importes.length ? Math.min(...importes) : 0;
+  const mesesConGastos = [...new Set(gastos.map(g => Number(g.mes)).filter(Number.isFinite))];
+  const mesesRegistrados = mesesConGastos.length;
+
+  // Las estadísticas anuales representan el comportamiento mensual del año:
+  // primero sumamos todos los gastos de cada mes y luego calculamos promedio,
+  // mayor y menor sobre esos totales mensuales. No se calculan sobre gastos individuales.
+  const totalesPorMes = mesesConGastos.map(mesNumero =>
+    gastos
+      .filter(g => Number(g.mes) === mesNumero)
+      .reduce((sum, g) => sum + Number(g.importe || 0), 0)
+  );
+  const promedioMensual = anual && totalesPorMes.length
+    ? totalesPorMes.reduce((sum, importe) => sum + importe, 0) / totalesPorMes.length
+    : 0;
+  const mayorMensual = anual && totalesPorMes.length ? Math.max(...totalesPorMes) : 0;
+  const menorMensual = anual && totalesPorMes.length ? Math.min(...totalesPorMes) : 0;
   const periodoLabel = anual ? `Año ${anio}` : (mes ? `${nombreMes(Number(mes))} ${anio}` : 'MES');
 
   return <section className="v2-gastos-panel">
@@ -41,7 +52,7 @@ export default function ListadoGastos({ anio, mes, gastos, loading, error, onEli
     {!loading && !error && gastos.length > 0 && <div className={anual ? 'v2-summary-grid v2-summary-grid-annual' : 'v2-summary-grid'}>
       <div className="v2-summary-card"><span>{anual ? 'Meses registrados' : 'Gastos registrados'}</span><strong>{anual ? mesesRegistrados : cantidad}</strong><small>{anual ? `Con gastos en ${anio}` : `${nombreMes(Number(mes))} ${anio}`}</small></div>
       <div className="v2-summary-card"><span>Gastos registrados</span><strong>{cantidad}</strong><small>{anual ? `Durante ${anio}` : `${nombreMes(Number(mes))} ${anio}`}</small></div>
-      {anual && <div className="v2-summary-stats"><div><span>Gasto promedio</span><strong>{formatearImporte(promedio)}</strong></div><div><span>Gasto mayor</span><strong>{formatearImporte(mayor)}</strong></div><div><span>Gasto menor</span><strong>{formatearImporte(menor)}</strong></div></div>}
+      {anual && <div className="v2-summary-stats"><div><span>Gasto promedio</span><strong>{formatearImporte(promedioMensual)}</strong></div><div><span>Gasto mayor</span><strong>{formatearImporte(mayorMensual)}</strong></div><div><span>Gasto menor</span><strong>{formatearImporte(menorMensual)}</strong></div></div>}
     </div>}
 
     {loading && <div className="v2-state">Cargando gastos…</div>}
