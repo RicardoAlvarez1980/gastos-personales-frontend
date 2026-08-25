@@ -7,6 +7,10 @@ export function formatearNombreServicio(nombre) {
     return 'Expensas Extraordinarias'
   }
 
+  if (nombre === 'PROTECCION_CIUDADANA') {
+    return 'Protección Ciudadana'
+  }
+
   return nombre
     .toLowerCase()
     .split('_')
