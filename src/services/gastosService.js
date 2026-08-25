@@ -23,3 +23,15 @@ export async function obtenerGastosPorPeriodo(anio, mes) {
   if (error) throw new Error(`No se pudieron obtener los gastos: ${error.message}`);
   return data ?? [];
 }
+
+export async function obtenerGastosPorAnio(anio) {
+  if (!anio) return [];
+  const { data, error } = await supabase
+    .from('gastos')
+    .select('id, servicio_id, año, mes, importe, servicios(id, nombre)')
+    .eq('año', Number(anio))
+    .order('mes', { ascending: true })
+    .order('servicio_id', { ascending: true });
+  if (error) throw new Error(`No se pudieron obtener los gastos del año: ${error.message}`);
+  return data ?? [];
+}
