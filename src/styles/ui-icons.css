@@ -1,7 +1,7 @@
 /* Capa visual independiente para los iconos offline. */
 .v2-form{position:relative;overflow:hidden;background:linear-gradient(145deg,#ffffff 0%,#f8fbff 100%);border:1px solid #d9e4f2;box-shadow:0 14px 35px rgba(30,64,175,.08)}
 .v2-form::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,#2563eb,#06b6d4,#10b981)}
-.v2-form-intro{padding:4px 4px 24px}.v2-form-icon{background:transparent;border:3px solid #10b981;border-radius:14px;box-shadow:0 4px 12px rgba(16,185,129,.15);padding:6px;display:grid;place-items:center;width:52px;height:52px}.v2-form-icon img{width:38px;height:38px;object-fit:contain}
+.v2-form-intro{padding:4px 4px 24px;display:flex;align-items:center;gap:14px}.v2-form-icon{background:transparent;border:0;box-shadow:none;padding:0;display:block;width:auto;height:auto;flex:none}.v2-form-icon img{width:40px;height:40px;object-fit:contain}
 .v2-form-grid{gap:20px}.v2-form-grid label{gap:8px}.v2-form-grid label>span{display:flex;align-items:center;gap:8px;color:#334155;font-size:12px;font-weight:750}
 .v2-field-icon{width:20px;height:20px;object-fit:contain;flex:none;padding:2px;border-radius:6px;background:#f1f5f9}
 .v2-form-grid select,.v2-form-grid input{min-height:48px;border-radius:11px;border-color:#d6e0ec;background:#fff;box-shadow:0 2px 7px rgba(15,23,42,.025)}
