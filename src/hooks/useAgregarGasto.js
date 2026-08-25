@@ -15,7 +15,7 @@ export function useAgregarGasto({ onSuccess } = {}) {
         return false;
       }
       await insertarGasto(nuevo);
-      onSuccess?.();
+      onSuccess?.(nuevo);
       return true;
     } catch (err) {
       setError(err?.message || err?.details || 'No se pudo guardar el gasto.');
@@ -28,8 +28,9 @@ export function useAgregarGasto({ onSuccess } = {}) {
     setLoading(true); setError('');
     try {
       await actualizarImporteGasto(confirmacion.nuevo);
+      const nuevo = confirmacion.nuevo;
       setConfirmacion(null);
-      onSuccess?.();
+      onSuccess?.(nuevo);
       return true;
     } catch (err) {
       setError(err?.message || err?.details || 'No se pudo actualizar el importe.');
