@@ -61,19 +61,31 @@ function Placeholder({ section }) { const item = menu.find(entry => entry.id ===
 
 export default function App() {
   const [section, setSection] = useState('inicio');
+  const [gastoGuardado, setGastoGuardado] = useState(null);
   const periodos = usePeriodos();
   const gastosState = useGastos(periodos.anio, periodos.mes);
   const servicios = useServicios();
+
   const refrescarTodo = async (anioPreferido = periodos.anio, mesPreferido = periodos.mes) => {
     await periodos.refrescar({ anioPreferido, mesPreferido });
-    await gastosState.recargar();
   };
+
   const eliminar = async (id) => {
     const ok = await gastosState.eliminar(id);
     if (ok) await periodos.refrescar({ anioPreferido: periodos.anio, mesPreferido: periodos.mes });
     return ok;
   };
-  const mutation = useAgregarGasto({ onSuccess: () => refrescarTodo() });
+
+  const handleGastoGuardado = async (nuevo) => {
+    await refrescarTodo(nuevo.año, nuevo.mes);
+    setSection('gastos');
+    setGastoGuardado(nuevo);
+  };
+
+  const mutation = useAgregarGasto({ onSuccess: handleGastoGuardado });
+  const servicioGuardado = gastoGuardado ? servicios.servicios.find(s => Number(s.id) === Number(gastoGuardado.servicio_id)) : null;
+  const cerrarExito = () => setGastoGuardado(null);
+  const irAlListado = () => { setGastoGuardado(null); setSection('gastos'); };
 
   return <div className="v2-shell">
     <aside className="v2-sidebar"><div className="v2-brand"><span className="v2-brand-mark">$</span><div><strong>Gastos</strong><small>PERSONALES · V2</small></div></div>
@@ -81,7 +93,12 @@ export default function App() {
       <div className="v2-sidebar-footer">Versión 2.0 · base inicial</div>
     </aside>
     <main className="v2-main"><header className="v2-header"><div><span className="v2-eyebrow">CONTROL PERSONAL</span><h1>{menu.find(item => item.id === section)?.label}</h1></div></header>
-      {section === 'inicio' ? <Inicio periodos={periodos} gastosState={gastosState} onEliminar={eliminar} /> : section === 'gastos' ? <section className="v2-dashboard"><div className="v2-page-toolbar"><div><span className="v2-eyebrow">HISTORIAL</span><h2>Gastos registrados</h2></div><SelectorPeriodos {...periodos} /></div><ListadoGastos {...gastosState} onEliminar={eliminar} onEditar={gastosState.editarImporte} /> </section> : section === 'agregar' ? <Agregar periodos={periodos} servicios={servicios.servicios} mutation={mutation} /> : <Placeholder section={section} />}
+      {section === 'inicio' ? <Inicio periodos={periodos} gastosState={gastosState} onEliminar={eliminar} /> : section === 'gastos' ? <section className="v2-dashboard"><div className="v2-page-toolbar"><div><span className="v2-eyebrow">HISTORIAL</span><h2>Gastos registrados</h2></div><SelectorPeriodos {...periodos} /></div><ListadoGastos {...gastosState} anio={periodos.anio} mes={periodos.mes} onEliminar={eliminar} onEditar={gastosState.editarImporte} /> </section> : section === 'agregar' ? <Agregar periodos={periodos} servicios={servicios.servicios} mutation={mutation} /> : <Placeholder section={section} />}
     </main>
+    {gastoGuardado && <Modal title="Gasto agregado correctamente" icon="✓" tone="edit" onCancel={cerrarExito} onConfirm={irAlListado} confirmLabel={`Ver gastos de ${mesesNombre[Number(gastoGuardado.mes) - 1]}`}>
+      <div className="v2-modal-context"><strong>{servicioGuardado ? servicioGuardado.nombre && servicioGuardado.nombre !== 'PROTECCION_CIUDADANA' ? servicioGuardado.nombre : 'Protección Ciudadana' : 'Gasto registrado'}</strong><span>{mesesNombre[Number(gastoGuardado.mes) - 1]} {gastoGuardado.año}</span></div>
+      <div className="v2-delete-amount">${Number(gastoGuardado.importe || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</div>
+      <p className="v2-modal-hint">El gasto fue guardado correctamente. Podés revisar todos los gastos de este período.</p>
+    </Modal>}
   </div>;
 }
