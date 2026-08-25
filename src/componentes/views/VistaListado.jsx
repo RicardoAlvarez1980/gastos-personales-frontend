@@ -15,6 +15,12 @@ export default function VistaListado({
   onEliminar,
 }) {
   const mostrarPaginado = anioSeleccionado === 'ALL' || mesSeleccionado === 'ALL'
+  const nombreMesSeleccionado =
+    mesSeleccionado === 'ALL'
+      ? 'Todos los meses'
+      : mesSeleccionado
+        ? nombreMes(Number(mesSeleccionado))
+        : ''
 
   return (
     <div>
@@ -23,7 +29,7 @@ export default function VistaListado({
       {/* ===========================
           SELECTORES
       =========================== */}
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem' }}>
         <select
           value={anioSeleccionado}
           onChange={e => {
@@ -60,6 +66,20 @@ export default function VistaListado({
       </div>
 
       {/* ===========================
+          ENCABEZADO DEL PERÍODO
+      =========================== */}
+      {nombreMesSeleccionado && (
+        <div style={{ marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
+            GASTOS REGISTRADOS
+          </h2>
+          <div style={{ marginTop: '0.2rem', fontSize: '1rem', fontWeight: 600 }}>
+            {nombreMesSeleccionado}
+          </div>
+        </div>
+      )}
+
+      {/* ===========================
           TABLA
       =========================== */}
       {loading && <p>Cargando...</p>}
@@ -79,7 +99,18 @@ export default function VistaListado({
             <tbody>
               {gastos.map(g => (
                 <tr key={g.id}>
-                  <td>{g.año}</td><td>{nombreMes(g.mes)}</td><td>{formatearNombreServicio(g.servicio_nombre)}</td><td>{Number(g.importe).toLocaleString('es-AR', {style: 'currency', currency: 'ARS'})}</td><td><button onClick={() => onEliminar(g.id)}>Eliminar</button></td>
+                  <td>{g.año}</td>
+                  <td>{nombreMes(g.mes)}</td>
+                  <td>{formatearNombreServicio(g.servicio_nombre)}</td>
+                  <td>
+                    {Number(g.importe).toLocaleString('es-AR', {
+                      style: 'currency',
+                      currency: 'ARS',
+                    })}
+                  </td>
+                  <td>
+                    <button onClick={() => onEliminar(g.id)}>Eliminar</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
