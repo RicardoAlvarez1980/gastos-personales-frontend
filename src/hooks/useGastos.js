@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { actualizarImporteGasto, eliminarGasto } from '../services/gastoMutations';
-import { obtenerGastosPorPeriodo } from '../services/gastosService';
+import { obtenerGastosPorPeriodo, obtenerGastosPorAnio } from '../services/gastosService';
 
 export function useGastos(anio, mes) {
   const [gastos, setGastos] = useState([]);
@@ -11,8 +11,9 @@ export function useGastos(anio, mes) {
   const cargar = useCallback(async () => {
     if (!anio || !mes) { setGastos([]); return; }
     setLoading(true); setError('');
-    try { setGastos(await obtenerGastosPorPeriodo(anio, mes)); }
-    catch (err) { setGastos([]); setError(err.message || 'No se pudieron cargar los gastos.'); }
+    try {
+      setGastos(mes === 'ANUAL' ? await obtenerGastosPorAnio(anio) : await obtenerGastosPorPeriodo(anio, mes));
+    } catch (err) { setGastos([]); setError(err.message || 'No se pudieron cargar los gastos.'); }
     finally { setLoading(false); }
   }, [anio, mes]);
 
