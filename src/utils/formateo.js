@@ -3,13 +3,22 @@
 export function formatearNombreServicio(nombre) {
   if (!nombre) return '—'
 
-  if (nombre === 'EXPENSAS_EXTRAS') {
-    return 'Expensas Extraordinarias'
+  const nombres = {
+    ARBA: 'ARBA',
+    INTERNET: 'Internet',
+    EXPENSAS_COMUNES: 'Expensas Comunes',
+    EXPENSAS_EXTRAS: 'Expensas Extraordinarias',
+    GAS: 'Gas',
+    LUZ: 'Luz',
+    MONOTRIBUTO: 'Monotributo',
+    MOVISTAR: 'Movistar',
+    PERSONAL: 'Personal',
+    PROTECCION_CIUDADANA: 'Protección Ciudadana',
+    TASAS_RETRIBUTIVAS: 'Tasas Retributivas',
+    SERVICIOS_SANITARIOS: 'Servicios Sanitarios',
   }
 
-  if (nombre === 'PROTECCION_CIUDADANA') {
-    return 'Protección Ciudadana'
-  }
+  if (nombres[nombre]) return nombres[nombre]
 
   return nombre
     .toLowerCase()
