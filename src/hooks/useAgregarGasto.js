@@ -5,9 +5,10 @@ export function useAgregarGasto({ onSuccess } = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [confirmacion, setConfirmacion] = useState(null);
+  const [exito, setExito] = useState(null);
 
   const guardar = async (nuevo) => {
-    setLoading(true); setError(''); setConfirmacion(null);
+    setLoading(true); setError(''); setConfirmacion(null); setExito(null);
     try {
       const existente = await verificarGastoExistente(nuevo);
       if (existente) {
@@ -15,7 +16,8 @@ export function useAgregarGasto({ onSuccess } = {}) {
         return false;
       }
       await insertarGasto(nuevo);
-      onSuccess?.(nuevo);
+      await onSuccess?.(nuevo);
+      setExito(nuevo);
       return true;
     } catch (err) {
       setError(err?.message || err?.details || 'No se pudo guardar el gasto.');
@@ -30,7 +32,8 @@ export function useAgregarGasto({ onSuccess } = {}) {
       await actualizarImporteGasto(confirmacion.nuevo);
       const nuevo = confirmacion.nuevo;
       setConfirmacion(null);
-      onSuccess?.(nuevo);
+      await onSuccess?.(nuevo);
+      setExito(nuevo);
       return true;
     } catch (err) {
       setError(err?.message || err?.details || 'No se pudo actualizar el importe.');
@@ -39,5 +42,6 @@ export function useAgregarGasto({ onSuccess } = {}) {
   };
 
   const cancelar = () => { if (!loading) setConfirmacion(null); };
-  return { guardar, confirmar, cancelar, loading, error, confirmacion };
+  const cerrarExito = () => { if (!loading) setExito(null); };
+  return { guardar, confirmar, cancelar, loading, error, confirmacion, exito, cerrarExito };
 }
