@@ -1,31 +1,39 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { actualizarImporteGasto, eliminarGasto } from '../services/gastoMutations';
+import { obtenerGastosPorPeriodo } from '../services/gastosService';
 
-export const useGastos = (API_BASE_URL) => {
-  const [error, setError] = useState(null);
-  const [cargando, setCargando] = useState(false);
+export function useGastos(anio, mes) {
+  const [gastos, setGastos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [editando, setEditando] = useState(false);
 
-  const handleRequest = useCallback(async (endpoint, options = {}) => {
-    setCargando(true);
-    setError(null);
-    
+  const cargar = useCallback(async () => {
+    if (!anio || !mes) { setGastos([]); return; }
+    setLoading(true); setError('');
+    try { setGastos(await obtenerGastosPorPeriodo(anio, mes)); }
+    catch (err) { setGastos([]); setError(err.message || 'No se pudieron cargar los gastos.'); }
+    finally { setLoading(false); }
+  }, [anio, mes]);
+
+  const eliminar = useCallback(async (id) => {
+    setError('');
+    try { await eliminarGasto(id); await cargar(); return true; }
+    catch (err) { setError(err?.message || err?.details || 'No se pudo eliminar el gasto.'); return false; }
+  }, [cargar]);
+
+  const editarImporte = useCallback(async (gasto, nuevoImporte) => {
+    setEditando(true); setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}${endpoint}`, options);
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      const data = await res.json();
-      return data;
-    } catch (e) {
-      setError(`Error: ${e.message}`);
-      throw e;
-    } finally {
-      setCargando(false); 
-    }
-  }, [API_BASE_URL]);
+      await actualizarImporteGasto({ servicio_id: gasto.servicio_id, año: gasto.año, mes: gasto.mes, importe: Number(nuevoImporte) });
+      await cargar();
+      return true;
+    } catch (err) {
+      setError(err?.message || err?.details || 'No se pudo actualizar el importe.');
+      return false;
+    } finally { setEditando(false); }
+  }, [cargar]);
 
-  return {
-    error,
-    cargando,
-    handleRequest
-  };
-};
+  useEffect(() => { cargar(); }, [cargar]);
+  return { gastos, loading, error, recargar: cargar, eliminar, editarImporte, editando };
+}
