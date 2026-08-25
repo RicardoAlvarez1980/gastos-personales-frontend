@@ -3,12 +3,12 @@
 .v2-form::before{display:none}
 .v2-form-intro{padding:2px 0 20px;display:flex;align-items:center;gap:14px}.v2-form-icon{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;display:block;width:auto;height:auto;flex:none;color:inherit!important}.v2-form-icon img{width:40px;height:40px;object-fit:contain;display:block;filter:none!important}
 .v2-form-intro h3{font-size:23px}.v2-form-intro p{font-size:15px}
-.v2-form-grid{gap:16px;margin-top:20px}.v2-form-grid label{gap:8px;font-size:14px}.v2-form-grid label>span{display:flex;align-items:center;gap:8px;color:#334155;font-size:14px;font-weight:700}
-.v2-field-icon{width:20px;height:20px;object-fit:contain;flex:none;padding:2px;border-radius:6px;background:#f1f5f9}
+/* Agregar gasto: dos filas compactas, conservando la distribución actual. */
+.v2-form-grid{grid-template-columns:1fr 1fr;gap:14px 18px;margin-top:20px}.v2-form-grid label{gap:8px;font-size:14px}.v2-form-grid label>span{display:flex;align-items:center;gap:8px;color:#334155;font-size:14px;font-weight:700}.v2-form-grid select{min-width:0;max-width:240px}.v2-form-grid input{min-width:0}.v2-field-icon{width:20px;height:20px;object-fit:contain;flex:none;padding:2px;border-radius:6px;background:#f1f5f9}
 .v2-form-grid select,.v2-form-grid input{min-height:46px;border-radius:9px}
-.v2-money-input{height:46px}
+.v2-money-input{height:46px}.v2-money-input b{position:static!important;display:flex!important;align-items:center;justify-content:center;width:auto!important;height:100%!important;margin-left:13px;margin-right:9px;background:transparent!important;border:0!important;color:inherit!important;font:600 20px/1 Inter,system-ui,sans-serif!important}.v2-money-input input{padding-left:0!important;font-size:18px!important;font-weight:600!important}
 .v2-form-footer{margin-top:20px;padding-top:18px}.v2-form-footer small{font-size:13px}
-.v2-primary-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:11px 20px;background:#059669;box-shadow:0 7px 18px rgba(5,150,105,.20)}.v2-primary-button:hover{background:#047857;box-shadow:0 9px 22px rgba(5,150,105,.25)}
+.v2-primary-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:11px 20px;background:#059669;box-shadow:0 7px 18px rgba(5,150,105,.20)}.v2-primary-button:hover{background:#047857;box-shadow:0 9px 18px rgba(5,150,105,.24)}
 .v2-save-icon{width:20px;height:20px;object-fit:contain;filter:brightness(0) invert(1)}
 /* Sidebar: los PNG originales son negros, así que se invierten a blanco para mantener contraste. */
 .v2-sidebar nav button span{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background-color:rgba(255,255,255,.08);font-size:0;background-repeat:no-repeat;background-position:center;background-size:19px;filter:brightness(0) invert(1);opacity:.9}
