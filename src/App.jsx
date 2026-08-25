@@ -29,7 +29,7 @@ function SelectorPeriodos({ anios, anio, setAnio, meses, mes, setMes, loading })
   </div>;
 }
 
-function Inicio({ periodos, gastosState }) {
+function Inicio({ periodos, gastosState, onEliminar }) {
   const { gastos } = gastosState;
   const total = gastos.reduce((sum, gasto) => sum + Number(gasto.importe || 0), 0);
   const mesNombre = periodos.mes ? mesesNombre[periodos.mes - 1] : '—';
@@ -41,7 +41,7 @@ function Inicio({ periodos, gastosState }) {
       <article><span>Meses cargados</span><strong>{periodos.meses.length}</strong><small>{periodos.anio ? `Con datos en ${periodos.anio}` : 'Seleccioná un año'}</small></article>
       <article><span>Gastos registrados</span><strong>{gastos.length}</strong><small>{periodos.mes ? mesesNombre[periodos.mes - 1] : 'Mes'} {periodos.anio || ''}</small></article>
     </div>
-    <ListadoGastos anio={periodos.anio} mes={periodos.mes} gastos={gastos} loading={gastosState.loading} error={gastosState.error} onEliminar={gastosState.eliminar} onEditar={gastosState.editarImporte} />
+    <ListadoGastos anio={periodos.anio} mes={periodos.mes} gastos={gastos} loading={gastosState.loading} error={gastosState.error} onEliminar={onEliminar} onEditar={gastosState.editarImporte} />
   </section>;
 }
 
@@ -64,7 +64,16 @@ export default function App() {
   const periodos = usePeriodos();
   const gastosState = useGastos(periodos.anio, periodos.mes);
   const servicios = useServicios();
-  const mutation = useAgregarGasto({ onSuccess: gastosState.recargar });
+  const refrescarTodo = async (anioPreferido = periodos.anio, mesPreferido = periodos.mes) => {
+    await periodos.refrescar({ anioPreferido, mesPreferido });
+    await gastosState.recargar();
+  };
+  const eliminar = async (id) => {
+    const ok = await gastosState.eliminar(id);
+    if (ok) await periodos.refrescar({ anioPreferido: periodos.anio, mesPreferido: periodos.mes });
+    return ok;
+  };
+  const mutation = useAgregarGasto({ onSuccess: () => refrescarTodo() });
 
   return <div className="v2-shell">
     <aside className="v2-sidebar"><div className="v2-brand"><span className="v2-brand-mark">$</span><div><strong>Gastos</strong><small>PERSONALES · V2</small></div></div>
@@ -72,7 +81,7 @@ export default function App() {
       <div className="v2-sidebar-footer">Versión 2.0 · base inicial</div>
     </aside>
     <main className="v2-main"><header className="v2-header"><div><span className="v2-eyebrow">CONTROL PERSONAL</span><h1>{menu.find(item => item.id === section)?.label}</h1></div></header>
-      {section === 'inicio' ? <Inicio periodos={periodos} gastosState={gastosState} /> : section === 'gastos' ? <section className="v2-dashboard"><div className="v2-page-toolbar"><div><span className="v2-eyebrow">HISTORIAL</span><h2>Gastos registrados</h2></div><SelectorPeriodos {...periodos} /></div><ListadoGastos {...gastosState} onEliminar={gastosState.eliminar} onEditar={gastosState.editarImporte} /></section> : section === 'agregar' ? <Agregar periodos={periodos} servicios={servicios.servicios} mutation={mutation} /> : <Placeholder section={section} />}
+      {section === 'inicio' ? <Inicio periodos={periodos} gastosState={gastosState} onEliminar={eliminar} /> : section === 'gastos' ? <section className="v2-dashboard"><div className="v2-page-toolbar"><div><span className="v2-eyebrow">HISTORIAL</span><h2>Gastos registrados</h2></div><SelectorPeriodos {...periodos} /></div><ListadoGastos {...gastosState} onEliminar={eliminar} onEditar={gastosState.editarImporte} /> </section> : section === 'agregar' ? <Agregar periodos={periodos} servicios={servicios.servicios} mutation={mutation} /> : <Placeholder section={section} />}
     </main>
   </div>;
 }
