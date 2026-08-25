@@ -85,7 +85,11 @@ export default function App() {
   const mutation = useAgregarGasto({ onSuccess: handleGastoGuardado });
   const servicioGuardado = gastoGuardado ? servicios.servicios.find(s => Number(s.id) === Number(gastoGuardado.servicio_id)) : null;
   const cerrarExito = () => setGastoGuardado(null);
-  const irAlListado = () => { setGastoGuardado(null); setSection('gastos'); };
+  const irAlListado = async () => {
+    setGastoGuardado(null);
+    await gastosState.recargar();
+    setSection('gastos');
+  };
 
   return <div className="v2-shell">
     <aside className="v2-sidebar"><div className="v2-brand"><span className="v2-brand-mark">$</span><div><strong>Gastos</strong><small>PERSONALES · V2</small></div></div>
