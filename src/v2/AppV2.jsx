@@ -1,59 +1,35 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { usePeriodos } from './hooks/usePeriodos';
 import { useGastos } from './hooks/useGastos';
+import { useServicios } from './hooks/useServicios';
+import { useAgregarGasto } from './hooks/useAgregarGasto';
 import ListadoGastosV2 from './components/gastos/ListadoGastosV2';
+import FormularioGastoV2 from './components/gastos/FormularioGastoV2';
+import ModalV2 from './components/common/ModalV2';
 import './styles/v2.css';
 
 const menu = [
-  { id: 'inicio', label: 'Inicio', icon: '⌂' },
-  { id: 'gastos', label: 'Gastos', icon: '▤' },
-  { id: 'agregar', label: 'Agregar gasto', icon: '+' },
-  { id: 'analisis', label: 'Análisis', icon: '◒' },
-  { id: 'buscar', label: 'Buscar', icon: '⌕' },
+  { id: 'inicio', label: 'Inicio', icon: '⌂' }, { id: 'gastos', label: 'Gastos', icon: '▤' },
+  { id: 'agregar', label: 'Agregar gasto', icon: '+' }, { id: 'analisis', label: 'Análisis', icon: '◒' }, { id: 'buscar', label: 'Buscar', icon: '⌕' },
 ];
 const mesesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 function SelectorPeriodos({ anios, anio, setAnio, meses, mes, setMes, loading }) {
-  return <div className="v2-filters">
-    <div><label htmlFor="year">Año</label><select id="year" value={anio ?? ''} onChange={(e) => setAnio(Number(e.target.value))} disabled={loading || !anios.length}>
-      {!anios.length && <option value="">Sin datos</option>}{anios.map((item) => <option key={item} value={item}>{item}</option>)}
-    </select></div>
-    <div><label htmlFor="month">Mes</label><select id="month" value={mes ?? ''} onChange={(e) => setMes(Number(e.target.value))} disabled={!meses.length}>
-      {!meses.length && <option value="">Sin datos</option>}{meses.map((item) => <option key={item} value={item}>{mesesNombre[item - 1] ?? item}</option>)}
-    </select></div>
-  </div>;
+  return <div className="v2-filters"><div><label htmlFor="year">Año</label><select id="year" value={anio ?? ''} onChange={(e) => setAnio(Number(e.target.value))} disabled={loading || !anios.length}>{!anios.length && <option value="">Sin datos</option>}{anios.map((item) => <option key={item} value={item}>{item}</option>)}</select></div><div><label htmlFor="month">Mes</label><select id="month" value={mes ?? ''} onChange={(e) => setMes(Number(e.target.value))} disabled={!meses.length}>{!meses.length && <option value="">Sin datos</option>}{meses.map((item) => <option key={item} value={item}>{mesesNombre[item - 1] ?? item}</option>)}</select></div></div>;
 }
 
 function Inicio({ periodos, gastos }) {
-  const { anios, anio, setAnio, meses, mes, setMes, loading, error } = periodos;
   const total = gastos.reduce((sum, gasto) => sum + Number(gasto.importe || 0), 0);
-  const mesesNombreCorto = mes ? mesesNombre[mes - 1] : '—';
-  return <section className="v2-dashboard">
-    <div className="v2-welcome"><div><span className="v2-eyebrow">RESUMEN</span><h2>Mis gastos</h2><p>Una vista clara de lo que realmente registraste.</p></div><SelectorPeriodos {...{ anios, anio, setAnio, meses, mes, setMes, loading }} /></div>
-    {error && <div className="v2-error">{error}</div>}
-    <div className="v2-cards">
-      <article><span>Total del período</span><strong>{total.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</strong><small>{mes ? `${mesesNombreCorto} ${anio}` : 'Sin período seleccionado'}</small></article>
-      <article><span>Meses cargados</span><strong>{meses.length}</strong><small>{anio ? `Con datos en ${anio}` : 'Seleccioná un año'}</small></article>
-      <article><span>Gastos registrados</span><strong>{gastos.length}</strong><small>En el período activo</small></article>
-    </div>
-    <ListadoGastosV2 anio={anio} mes={mes} gastos={gastos} loading={periodos.loading || !mes} error={error} />
-  </section>;
+  const mesNombre = periodos.mes ? mesesNombre[periodos.mes - 1] : '—';
+  return <section className="v2-dashboard"><div className="v2-welcome"><div><span className="v2-eyebrow">RESUMEN</span><h2>Mis gastos</h2><p>Una vista clara de lo que realmente registraste.</p></div><SelectorPeriodos {...periodos} /></div>{periodos.error && <div className="v2-error">{periodos.error}</div>}<div className="v2-cards"><article><span>Total del período</span><strong>{total.toLocaleString('es-AR',{style:'currency',currency:'ARS'})}</strong><small>{periodos.mes ? `${mesNombre} ${periodos.anio}` : 'Sin período seleccionado'}</small></article><article><span>Meses cargados</span><strong>{periodos.meses.length}</strong><small>{periodos.anio ? `Con datos en ${periodos.anio}` : 'Seleccioná un año'}</small></article><article><span>Gastos registrados</span><strong>{gastos.length}</strong><small>En el período activo</small></article></div><ListadoGastosV2 {...{anio:periodos.anio,mes:periodos.mes,gastos}} /></section>;
 }
 
-function Gastos({ periodos, gastosState }) {
-  return <section className="v2-dashboard"><div className="v2-page-toolbar"><div><span className="v2-eyebrow">HISTORIAL</span><h2>Gastos registrados</h2></div><SelectorPeriodos {...periodos} /></div><ListadoGastosV2 anio={periodos.anio} mes={periodos.mes} {...gastosState} /></section>;
+function Agregar({ periodos, servicios, mutation }) {
+  return <section className="v2-dashboard"><div className="v2-page-toolbar"><div><span className="v2-eyebrow">NUEVO REGISTRO</span><h2>Agregar gasto</h2><p>Registrá lo que realmente pagaste.</p></div></div>{mutation.error && !mutation.confirmacion && <div className="v2-error">{mutation.error}</div>}<FormularioGastoV2 anios={periodos.anios} servicios={servicios} onGuardar={mutation.guardar} loading={mutation.loading}/>{mutation.confirmacion && <ModalV2 title="El gasto ya existe" onCancel={mutation.cancelar} onConfirm={mutation.confirmar} confirmLabel="Modificar importe"><p>Ya existe un gasto para ese año, mes y servicio.</p><p>Importe actual: <strong>{mutation.confirmacion.existente.importe}</strong></p><p>Nuevo importe: <strong>{mutation.confirmacion.nuevo.importe}</strong></p><p>¿Querés reemplazar el importe actual?</p></ModalV2>}</section>;
 }
-
-function Agregar() {
-  return <section className="v2-dashboard"><div className="v2-placeholder"><span className="v2-eyebrow">NUEVO REGISTRO</span><h2>Agregar gasto</h2><p>En el próximo paso incorporamos el formulario conectado a servicios y validación de duplicados.</p></div></section>;
-}
-function Placeholder({ section }) { const item = menu.find((entry) => entry.id === section); return <section className="v2-placeholder"><span className="v2-eyebrow">GASTOS PERSONALES · V2</span><h2>{item?.label}</h2><p>Este módulo será conectado en la próxima etapa.</p></section>; }
+function Placeholder({ section }) { const item=menu.find((entry)=>entry.id===section); return <section className="v2-placeholder"><span className="v2-eyebrow">GASTOS PERSONALES · V2</span><h2>{item?.label}</h2><p>Este módulo será conectado en la próxima etapa.</p></section>; }
 
 export default function AppV2() {
-  const [section, setSection] = useState('inicio');
-  const periodos = usePeriodos();
-  const gastosState = useGastos(periodos.anio, periodos.mes);
-  const total = useMemo(() => gastosState.gastos.reduce((sum, gasto) => sum + Number(gasto.importe || 0), 0), [gastosState.gastos]);
-
-  return <div className="v2-shell"><aside className="v2-sidebar"><div className="v2-brand"><span className="v2-brand-mark">$</span><div><strong>Gastos</strong><small>PERSONALES · V2</small></div></div><nav>{menu.map((item) => <button key={item.id} className={section === item.id ? 'active' : ''} onClick={() => setSection(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav><div className="v2-sidebar-footer">Versión 2.0 · base inicial</div></aside><main className="v2-main"><header className="v2-header"><div><span className="v2-eyebrow">CONTROL PERSONAL</span><h1>{menu.find((item) => item.id === section)?.label}</h1></div></header>{section === 'inicio' ? <Inicio periodos={periodos} gastos={gastosState.gastos} total={total} /> : section === 'gastos' ? <Gastos periodos={periodos} gastosState={gastosState} /> : section === 'agregar' ? <Agregar /> : <Placeholder section={section} />}</main></div>;
+  const [section,setSection]=useState('inicio'); const periodos=usePeriodos(); const gastosState=useGastos(periodos.anio,periodos.mes); const servicios=useServicios(); const mutation=useAgregarGasto({onSuccess:gastosState.recargar});
+  return <div className="v2-shell"><aside className="v2-sidebar"><div className="v2-brand"><span className="v2-brand-mark">$</span><div><strong>Gastos</strong><small>PERSONALES · V2</small></div></div><nav>{menu.map((item)=><button key={item.id} className={section===item.id?'active':''} onClick={()=>setSection(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav><div className="v2-sidebar-footer">Versión 2.0 · base inicial</div></aside><main className="v2-main"><header className="v2-header"><div><span className="v2-eyebrow">CONTROL PERSONAL</span><h1>{menu.find((item)=>item.id===section)?.label}</h1></div></header>{section==='inicio'?<Inicio periodos={periodos} gastos={gastosState.gastos}/>:section==='gastos'?<section className="v2-dashboard"><div className="v2-page-toolbar"><div><span className="v2-eyebrow">HISTORIAL</span><h2>Gastos registrados</h2></div><SelectorPeriodos {...periodos}/></div><ListadoGastosV2 {...gastosState}/></section>:section==='agregar'?<Agregar periodos={periodos} servicios={servicios.servicios} mutation={mutation}/>:<Placeholder section={section}/>}</main></div>;
 }
