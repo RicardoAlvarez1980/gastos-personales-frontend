@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { obtenerGastosPorPeriodo } from '../services/gastosService';
+import { eliminarGasto } from '../services/gastoMutations';
 
 export function useGastos(anio, mes) {
   const [gastos, setGastos] = useState([]);
@@ -7,27 +8,26 @@ export function useGastos(anio, mes) {
   const [error, setError] = useState('');
 
   const cargar = useCallback(async () => {
-    if (!anio || !mes) {
-      setGastos([]);
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    try {
-      const data = await obtenerGastosPorPeriodo(anio, mes);
-      setGastos(data);
-    } catch (err) {
-      setGastos([]);
-      setError(err.message || 'No se pudieron cargar los gastos.');
-    } finally {
-      setLoading(false);
-    }
+    if (!anio || !mes) { setGastos([]); return; }
+    setLoading(true); setError('');
+    try { setGastos(await obtenerGastosPorPeriodo(anio, mes)); }
+    catch (err) { setGastos([]); setError(err.message || 'No se pudieron cargar los gastos.'); }
+    finally { setLoading(false); }
   }, [anio, mes]);
 
-  useEffect(() => {
-    cargar();
+  const eliminar = useCallback(async (id) => {
+    setError('');
+    try {
+      await eliminarGasto(id);
+      await cargar();
+      return true;
+    } catch (err) {
+      const mensaje = err?.message || err?.details || 'No se pudo eliminar el gasto.';
+      setError(mensaje);
+      return false;
+    }
   }, [cargar]);
 
-  return { gastos, loading, error, recargar: cargar };
+  useEffect(() => { cargar(); }, [cargar]);
+  return { gastos, loading, error, recargar: cargar, eliminar };
 }
