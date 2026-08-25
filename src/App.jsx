@@ -6,15 +6,15 @@ import { useAgregarGasto } from './hooks/useAgregarGasto';
 import ListadoGastos from './components/gastos/ListadoGastos';
 import FormularioGasto from './components/gastos/FormularioGasto';
 import Modal from './components/common/Modal';
-import { formatearImporte, formatearNombreServicio, nombreMes } from './utils/formateo';
+import { formatearImporte, formatearNombreServicio } from './utils/formateo';
 import './styles/v2.css';
 import './styles/analisis.css';
 
 const menu = [
-  { id: 'inicio', label: 'Resumen anual', icon: '▥' },
+  { id: 'inicio', label: 'Resumen anual', icon: '▦' },
   { id: 'gastos', label: 'Gastos mensuales', icon: '▤' },
-  { id: 'agregar', label: 'Agregar gasto', icon: '+' },
-  { id: 'analisis', label: 'Análisis', icon: '◒' },
+  { id: 'agregar', label: 'Agregar gasto', icon: '＋' },
+  { id: 'analisis', label: 'Análisis', icon: '◔' },
   { id: 'buscar', label: 'Buscar', icon: '⌕' },
 ];
 const mesesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
